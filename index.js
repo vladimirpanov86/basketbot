@@ -1,16 +1,18 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 process.env.NTBA_FIX_319 = 1;
 const TelegramBot = require('node-telegram-bot-api');
+const schedule = require('node-schedule');
 const token = process.env.TOKEN;
-console.log(process.env.TOKEN)
+console.log(`token = ${token}`)
 
 const bot = new TelegramBot(token, { polling: true });
 
-var users = [];
-var str = "Это Эребор";
+let users = [];
+
 bot.on('polling_error', (error) => {
-  console.log(error.code);  // => 'EFATAL'
+  console.log(error);  // => 'EFATAL'
 });
+
 bot.on('message', (msg) => {
   const chatId = msg.chat.id;
   resp = getCommand(msg);
@@ -36,6 +38,9 @@ function getCommand(msg) {
     },
     '/run': function () {
       bot.sendMessage(msg.chat.id, 'Идет опрос. Кто на май??');
+    },
+    '/reload': function () {
+      removeAll(msg);
     }
   };
   return (command[msg.text])();
@@ -56,13 +61,22 @@ function print_list(arr) {
 }
 
 function removeValue(arr, value) {
-  for (var i = 0; i < arr.length; i++) {
+  for (let i = 0; i < arr.length; i++) {
     if (arr[i] === value) {
       arr.splice(i, 1);
       break;
     }
   }
   return arr;
+}
+
+function removeAll(msg) {
+  if (msg.from.id === 188017717) {
+    bot.sendMessage(msg.chat.id, 'Почистил...');
+    users = [];
+  } else {
+    bot.sendMessage(msg.chat.id, 'Ты недостоин...');
+  }
 }
 
 function addUser(user, id) {
@@ -74,3 +88,10 @@ function addUser(user, id) {
     bot.sendMessage(id, "Ты не успел, сорян");
   }
 }
+
+schedule.scheduleJob('0 1 * * 1', () => {
+  users = []; // Обнуляем массив
+
+  // Уведомляем всех участников в массиве users, если это нужно
+  bot.sendMessage('1001168936329', 'Можно врываться на вторничный движ!');
+});
